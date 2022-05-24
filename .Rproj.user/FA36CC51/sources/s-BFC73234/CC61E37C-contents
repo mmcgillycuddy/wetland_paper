@@ -1,0 +1,66 @@
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lmerTest)
+library(lme4)
+library(emmeans)
+library(kableExtra)
+library(glmmTMB)
+
+
+treatment <- read.csv("data/water_fire_treatment.csv") %>% 
+  select(Sod,water_treatment, fire_treatment, veg) 
+
+
+times <- read.csv("data/time.csv") %>% 
+  select(-Median_time_pt) %>% 
+  mutate(Time_pt_factor = factor(Time_pt))
+
+
+baci_compo <- read.csv("data/derived/composition_data_long.csv") %>% 
+  mutate(fire_treatment_aloc = fire_treatment) %>% 
+  mutate(fire_treatment = ifelse(fire_treatment == "b" &  Time_pt  <= 6, "ub",fire_treatment)) %>% 
+  mutate(water_treatment = factor(water_treatment, levels = c("H", "M", "L"))) %>% 
+  mutate(fire_treatment = factor(fire_treatment, levels = c("ub","b"))) %>% 
+  mutate(Time_num = Time_pt) %>% 
+  mutate(Time_pt_factor = factor(Time_pt, levels = as.character(1:9))) %>% 
+  left_join(times, by = "Time_pt_factor") %>% 
+  mutate(Time_pt_factor = relevel(Time_pt_factor, ref = 9))
+
+
+
+
+### choose species
+
+spp_fit <- "Epac obtu"
+one_species <- baci_compo %>% 
+  filter(Species == spp_fit)
+
+
+# fit model
+one_sp_mod <- glmmTMB(PA ~ Swamp + veg +  Time_num*water_treatment +  
+                      water_treatment*fire_treatment + Time_num*fire_treatment + (1|Sod), 
+                    family = binomial,
+                    data = one_species)
+
+emmip(one_sp_mod,  ~ water_treatment ~ Time_num | fire_treatment, 
+      at = list(Time_num = 1:9), CIs = T )
+
+
+#plot
+pos = position_dodge(width=60)
+
+plot_df %>% 
+  mutate(fire_treatment = factor(fire_treatment, levels = c("ub","b"), labels = c("unburnt","burnt")),
+         Time = as.numeric(as.character(Time_pt_factor))) %>% 
+  ggplot(aes(Time,yvar,color = water_treatment, linetype = fire_treatment))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(veg ~ Swamp, scales = "free", ncol = 4)+  #or facet_grid(Swamp~veg)
+  theme_classic()+
+  ylab("Probability")+
+  xlab("Time (days)")+
+  theme(legend.position = "bottom")
+
+
+# so for this species it seems like the fire really makes a difference

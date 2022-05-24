@@ -1,0 +1,64 @@
+library(glmmTMB)
+library(tidyverse)
+library(ggplot2)
+
+###-----
+###-----
+### Composition models
+###-----
+###-----
+
+# read in data
+compo <- read.csv("data/derived/composition_data_long_March22.csv")
+
+# Data used
+# a. Change burnt to unburnt if it is before time point 6
+PA_long <- compo %>% 
+  mutate(Time_pt = as.numeric(Time_pt)) %>% 
+  mutate(fire_treatment_aloc = fire_treatment) %>% 
+  mutate(fire_treatment = ifelse(fire_treatment == "b" &  as.numeric(Time_pt) <= 6, "ub",fire_treatment)) %>% 
+  mutate(fire_treatment = factor(fire_treatment, levels = c("ub","b"))) 
+
+### Full dataset
+PA_data <- PA_long %>% 
+  group_by(Species) %>% 
+  mutate(n_pres_spp = sum(PA)) %>% 
+  ungroup(Species) %>% 
+  group_by(Sod) %>% 
+  mutate(n_pres_sod = sum(PA)) %>% 
+  ungroup(Sod) %>% 
+  #remove sods and species with few presences
+  filter(n_pres_sod > 9 & n_pres_spp > 9) %>% 
+  droplevels() 
+
+## Traits data
+trait_data <- read.csv("data/water_fire_response_species.csv") %>% 
+  select(Species.code, Water_trait_derived) %>% 
+  rename(Species = Species.code)
+
+PA_trait_data <- left_join(PA_data, trait_data, by = "Species")
+
+###-----
+### Full model with all effects (i.e., variables of interest in both fixed and random effects)
+###-----
+fmla_water_trait = as.formula(PA ~ Swamp + veg +  Time_pt*water_treatment +
+                               Time_pt*fire_treatment +
+                               water_treatment*fire_treatment + 
+                               Time_pt*water_treatment*Water_trait_derived +
+                               diag(Swamp + veg +  Time_pt*water_treatment + Time_pt*fire_treatment +
+                                      water_treatment*fire_treatment | Species) + 
+                               rr(0 + Species | Sod, 2))
+
+comp_water_trait_fit <- glmmTMB(fmla_water_trait,
+                      family = binomial(), 
+                      control = glmmTMBControl(start_method = list(method = "res")),
+                      data = PA_data)
+
+load( "comp_water_trait_model.RData")
+
+anova(comp_water_fire_fit, comp_water_trait_fit)
+
+summary(comp_water_trait_fit)
+
+### corrplot
+### add traits*time*water interaction to full model - only species she has 

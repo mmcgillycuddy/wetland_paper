@@ -1,0 +1,48 @@
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lmerTest)
+library(lme4)
+library(emmeans)
+library(kableExtra)
+library(glmmTMB)
+
+# read in data
+compo <- read.csv("data/derived/composition_data_long_March22.csv")
+
+# Data used
+# a. Change burnt to unburnt if it is before time point 6
+PA_long <- compo %>% 
+  mutate(Time_pt = as.numeric(Time_pt)) %>% 
+  mutate(fire_treatment_aloc = fire_treatment) %>% 
+  mutate(fire_treatment = ifelse(fire_treatment == "b" &  as.numeric(Time_pt) <= 6, "ub",fire_treatment)) %>% 
+  mutate(fire_treatment = factor(fire_treatment, levels = c("ub","b"))) 
+
+### choose species
+spp_fit <- "Epac obtu"
+one_species <- PA_long %>% 
+  filter(Species == spp_fit)
+
+# fit model
+one_sp_mod <- glmmTMB(PA ~ Swamp + veg +  Time_pt*water_treatment +  
+                      water_treatment*fire_treatment + Time_pt*fire_treatment + (1|Sod), 
+                    family = binomial,
+                    data = one_species)
+plot_df <- emmip(one_sp_mod,  ~ water_treatment ~ Time_pt | fire_treatment, 
+      at = list(Time_pt = 1:9), CIs = T )$data
+#plot
+pos = position_dodge(width=0.1)
+
+plot_df %>% 
+  mutate(fire_treatment = factor(fire_treatment, levels = c("ub","b"), 
+                                 labels = c("unburnt","burnt"))) %>% 
+  ggplot(aes(Time_pt, yvar, color = water_treatment))+
+  geom_point( position=pos)+
+  geom_path(position=pos)+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),position=pos, alpha = 0.5, width = 0,  lwd = 1.6) +
+  facet_grid(~ fire_treatment)+
+  theme_classic()+
+  ylab("Linear prediction")+
+  xlab("Time")+
+  theme(legend.position = "bottom")
+
