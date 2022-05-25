@@ -11,16 +11,9 @@ set.seed(1001)
 # read in data
 compo <- read.csv("data/derived/composition_data_long_March22.csv")
 
-# Change burnt to unburnt if it is before time point 6
-PA_long <- compo %>% 
-  mutate(Time_pt = as.numeric(Time_pt)) %>% 
-  mutate(fire_treatment_aloc = fire_treatment) %>% 
-  mutate(fire_treatment = ifelse(fire_treatment == "b" &  as.numeric(Time_pt) <= 6, "ub",fire_treatment)) %>% 
-  mutate(fire_treatment = factor(fire_treatment, levels = c("ub","b"))) 
-
 ### Analysis dataset
 ### Remove sods and species with few presences
-PA_data <- PA_long %>% 
+PA_data <- compo %>% 
   group_by(Species) %>% 
   mutate(n_pres_spp = sum(PA)) %>% 
   ungroup(Species) %>% 

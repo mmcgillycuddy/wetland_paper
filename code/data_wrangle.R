@@ -7,18 +7,14 @@ treatment <- read.csv("data/water_fire_treatment.csv") %>%
 species_data <- read.csv("data/long_comp_2017_2020_Mar_2022_update.csv", strip.white = TRUE) %>% 
   select(Sod, Species, Time_pt, HvMax, live_dead) %>% 
   mutate(HvMax = as.numeric(HvMax))
-
-# filter out the dead observations ("d"), "" and "dying" is incuded
+# filter out the dead observations ("d"), "" and "dying" is included
 species_data <- species_data %>% 
   filter(live_dead != "d") %>% 
   select(-live_dead)
 
 species_names <- read.csv("data/species_list_glasshouse_updated_March_22.csv", header = FALSE)
-
 # start with a line for each Species by time by Sod combination and all the species data
-expanded_data<- expand.grid(Species = species_names$V1, 
-                       Time_pt = 1:9, 
-                       Sod = sort(unique(species_data$Sod))) %>% 
+expanded_data<- expand.grid(Species = species_names$V1,  Time_pt = 1:9, Sod = sort(unique(species_data$Sod))) %>% 
   full_join(species_data) %>% 
   filter(Species %in% species_names$V1) 
 
