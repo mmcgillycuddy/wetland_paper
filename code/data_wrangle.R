@@ -41,3 +41,27 @@ compo_wide <- compo_tmp %>%
     pivot_wider(names_from = Species, values_from = PA, id_cols = c( Time_pt, Sod, Swamp:fire_treatment_aloc) )
 
 write.csv(compo_wide,"data/derived/composition_data_wide_March22.csv")
+
+
+### Richness dataset
+times <- read.csv("data/time.csv") %>% 
+  select(-Median_time_pt) %>% 
+  mutate(Time_pt_factor = factor(Time_pt))
+
+treatment <- read.csv("data/water_fire_treatment.csv") %>% 
+  select(Sod,water_treatment, fire_treatment, veg)
+
+rich_data <- read.csv("data/derived/composition_data_long_March22.csv") %>% 
+  group_by(Sod, Time_pt) %>% 
+  summarise(richness = sum(PA), Swamp = first(Swamp)) %>% 
+  left_join(treatment) %>% 
+  mutate(fire_treatment_aloc = fire_treatment) %>% 
+  mutate(fire_treatment = ifelse(fire_treatment == "b" &  Time_pt  <= 6, "ub",fire_treatment)) %>% 
+  mutate(water_treatment = factor(water_treatment, levels = c("H", "M", "L"))) %>% 
+  mutate(fire_treatment = factor(fire_treatment, levels = c("ub","b"))) %>% 
+  mutate(Time_num = Time_pt) %>% 
+  mutate(Time_pt_factor = factor(Time_pt)) %>% 
+  left_join(times)
+
+write.csv(rich_data,"data/derived/richness_long.csv")
+
