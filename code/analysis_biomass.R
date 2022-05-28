@@ -59,6 +59,7 @@ blanks <- expand.grid(water_treatment = levels(joined$water_treatment),
 plot_df <- joined %>% 
   bind_rows(blanks)
 pos = position_dodge(width = 50)
+
 bio_plot <- plot_df %>%
   ggplot(aes(Median_time, yvar, color = water_treatment), position = position_dodge2(width = 0.1)) +
   geom_point( position = pos) +
@@ -70,8 +71,8 @@ bio_plot <- plot_df %>%
   ylab("Mean biomass (+/- 95% CI) per mesocosms (g)") +
   theme(legend.position = "none",
         axis.text = element_text( size = 12), 
-        axis.title = element_text( size = 14)) + 
-  scale_colour_ochre(palette="healthy_reef", reverse = T)
+        axis.title = element_text( size = 14)) +
+  scale_colour_manual(values = clrs3)
 
 ggsave(plot = bio_plot, file = "plots/biomass_plot.png" , h = 8, w = 12 , type = "cairo-png")
 

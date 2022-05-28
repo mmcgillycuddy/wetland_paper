@@ -60,3 +60,7 @@ startParFitted <- function(model.fitted, model.noFit){
   
   return(start.pars)
 }
+
+### For plots
+clrs2 <- ochre_palettes$namatjira_qual[c(6, 8)]
+clrs3 <- ochre_palettes$namatjira_qual[c(5, 6, 8)]

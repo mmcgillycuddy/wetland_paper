@@ -70,8 +70,8 @@ rich_plot <- plot_df %>%
   ylab("Mean species richness (+/- 95% CI) per mesocosms (g)") +
   theme(legend.position = "bottom",
         axis.text = element_text( size = 12), 
-        axis.title = element_text( size = 14)) + 
-  scale_colour_ochre(palette="healthy_reef", reverse = T)
+        axis.title = element_text( size = 14)) +
+  scale_colour_manual(values = clrs3)
 
 ggsave(plot = rich_plot, file = "plots/richness_plot.png" , h = 8, w = 12 , type = "cairo-png")
 

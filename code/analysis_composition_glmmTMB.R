@@ -101,9 +101,7 @@ time.water_fire <- time.end.water_fire - time.start.water_fire
 anova(comp_water_fire_fit, comp_water.fire_fixed_fit)
 anova(comp_water_fire_fit, comp_time.water_fixed_fit)
 ###-----
-###-----
 ### Traits model
-###-----
 ##-----
 ## Water trait
 ##-----
@@ -121,8 +119,6 @@ start.par.wt <- startParFitted(comp_water.fire_fixed_fit, comp_trait_nofit)
 ### Trait water model fit
 comp_water_trait_fit <- glmmTMB(fmla_water_trait, family = binomial(), data = PA_data, 
                                 start = list(beta = start.par.wt$start.beta, theta = start.par.wt$start.theta, b = start.par.wt$start.b))
-
-
 ##-----
 ## Fire trait
 ##-----
@@ -139,7 +135,6 @@ comp_fire_trait_fit <- glmmTMB(fmla_fire_trait,
                                 family = binomial(), 
                                 start = list(beta = start.beta, theta = start.theta, b = start.b),
                                 data = PA_data)
-
 ## Test traits
 anova(comp_water_fire_fit, comp_water_trait_fit)
 anova(comp_water_fire_fit, comp_fire_trait_fit)
@@ -149,7 +144,6 @@ em = emmeans(comp_water_fire_fit, ~ Time_pt + water_treatment, at = list(Time_pt
 
 base <- as.data.frame(diag(2*3))
 combm = as.data.frame(em)[,1:2]
-
 colnames(base)= rownames(base)=paste0(combm$water_treatment,combm$Time_pt)
 selected_contrasts <- contrast(em, method =  list("H v. L by time interaction" =  ( (base$L9 - base$L1) - (base$H9 - base$H1)),
                                                   "H v. M by time interaction" =  ( (base$M9 - base$M1) - (base$H9 - base$H1))), 
@@ -158,26 +152,18 @@ CI = confint(selected_contrasts) %>% as.data.frame()
 1 - CI[,c(2,5,6)]
 
 em = emmeans(comp_water_fire_fit, ~ fire_treatment + water_treatment, at = list(Time_pt = c(1,9)))
-
 base <- as.data.frame(diag(2*3))
 combm = as.data.frame(em)[,1:2]
-
 colnames(base)= rownames(base)=paste0(combm$fire_treatment,combm$water_treatment)
-selected_contrasts <- contrast(em, method = 
-                                 list("H v. L by b vs ub" = 
-                                        (  (base$ubL - base$ubH) - (base$bL - base$bH)),
-                                      "H v. M by b vs ub" = 
-                                        ( (base$ubM - base$ubH) - (base$bM - base$bH))), 
+selected_contrasts <- contrast(em, method = list("H v. L by b vs ub" =  (  (base$ubL - base$ubH) - (base$bL - base$bH)),
+                                      "H v. M by b vs ub" = ( (base$ubM - base$ubH) - (base$bM - base$bH))), 
                                adjust = "mvt", type = "response")
 
-
 CI = confint(selected_contrasts) %>% as.data.frame()
-
 CI
 ### --------------------------------------
 ### Plot random effects - diag
 ### --------------------------------------
-load("results/comp_fire_water_plot_dataMarch22.RData")
 ### Get 
 object <- comp_water_fire_fit
 cnms <- object$modelInfo$reTrms[["cond"]]$cnms   ## list of (named) terms and X columns
@@ -212,6 +198,7 @@ sd.re <- cbind(coef.nam, nam.grp, sd.b)
 names(sd.re) <- c("Coefficient", names(levs[block.plot]), "sd.b")
 ranef.plot <- left_join(b.plot.long, sd.re, by = intersect(names(b.plot.long), names(sd.re)))
 
+load("results/comp_fire_water_plot_dataMarch22.RData")
 ### --------------------------------------
 ### Data for plots
 ### --------------------------------------
@@ -222,7 +209,6 @@ fixed_coefs <- fixef(comp_water_fire_fit)$cond %>%
   as.data.frame() %>%
   rownames_to_column( var = "Coefficient") %>% 
   rename(fixed_coef = 2)
-
 ### 
 ranef_fixed_plot <- ranef.plot %>%
   left_join(fixed_coefs, by = "Coefficient") %>% 
@@ -237,9 +223,7 @@ ranef_fixed_plot <- ranef.plot %>%
          abund_high = ifelse(Coefficient %in% highlight_coef &  not.zero_tot, 1, 0 ),
          effect = ifelse(abund_high==1 & comp_high == 1,"abundance and composition",
                          ifelse(abund_high==1 & comp_high == 0,"abundance only",
-                                ifelse(comp_high == 1, "composition only","neither"))),
-         above_below = case_when(conf.high_tot < 0 ~ "below",
-                                 conf.low_tot > 0 ~ "above") )
+                                ifelse(comp_high == 1, "composition only","neither"))) )
 
 ### plot.spp are the species that have at least one effect
 plot.spp <- ranef_fixed_plot$Species[ranef_fixed_plot$effect!="neither"] 
@@ -252,9 +236,6 @@ names(supp.labs) <- highlight_coef
 ### Get full names for species 
 sp_names <- read.csv("data/full_species_names_comp_analysis.csv") %>% 
   rename( Species_full = Full.species.name..in.italics.)
-ranef_fixed_plot <- ranef_fixed_plot %>% 
-  left_join(sp_names, by = "Species")
-
 ### --------------------------------------
 ### Treatment effect Plot
 ### Where treatment is fixed + random effect, (ie. beta + b = btot)
@@ -263,17 +244,16 @@ ranef_fixed_plot <- ranef_fixed_plot %>%
 Spp_abundance_data <- ranef_fixed_plot %>% 
   filter(Species %in% plot.spp,
          Coefficient %in% highlight_coef,
-         effect=="abundance only" | effect =="abundance and composition") %>% 
-  droplevels()
+         effect=="abundance only" | effect =="abundance and composition") %>%
+  mutate(above_below = case_when(conf.high_tot < 0 ~ "below",
+                                 conf.low_tot > 0 ~ "above")) %>% 
+  droplevels() %>% 
+  left_join(sp_names)
 
-clrs <- ochre_palettes$namatjira_qual[6:7]
-clrs <- ochre_palettes$namatjira_qual[c(6, 8)]
-viz_palette( ochre_palettes$healthy_reef)
-
-Spp_abundance_data %>% 
+spp_abund_plot <- Spp_abundance_data %>% 
   ggplot(aes(x = Species_full, y = btot, color = above_below)) +
   geom_point()+ 
-  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot), size = 1) +
+  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot), size = 1, alpha = 0.5 ) +
   geom_hline(yintercept = 0) +
   facet_grid(~ Coefficient, scales = "free", 
              labeller = labeller(Coefficient = supp.labs), switch = "y") +
@@ -289,7 +269,10 @@ Spp_abundance_data %>%
          strip.text = element_text(size = 8),
          legend.position="none",
          strip.text.x = element_text(size=8, angle=0)) +
-  scale_colour_manual(values = clrs) 
+  scale_colour_manual(values = clrs2)
+
+
+ggsave(file = "plots/spp_abund.png", spp_abund_plot, device = "png", height = 8, width = 8)
 
 
 ### --------------------------------------
@@ -299,21 +282,22 @@ Spp_abundance_data %>%
 Spp_comp_data <- ranef_fixed_plot %>% 
   filter(Species %in% plot.spp,
          Coefficient %in% highlight_coef,
-         effect=="composition only" | effect =="abundance and composition") %>% 
-  droplevels() 
+         effect == "composition only" | effect == "abundance and composition") %>% 
+  mutate(above_below = case_when(conf.high_tot < fixed_coef ~ "below",
+                                 conf.low_tot > fixed_coef ~ "above")) %>% 
+  droplevels() %>% 
+  left_join(sp_names)
 
-Spp_comp_data %>% 
+spp_comp_plot <- Spp_comp_data %>% 
   ggplot(aes(x = Species_full, y = btot, color = above_below)) +
   geom_point()+ 
-  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot)) +
+  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot), size = 1, alpha = 0.5 ) +
   geom_hline(data = fixed_coefs %>% filter(Coefficient %in% highlight_coef), 
              aes(yintercept = fixed_coef), linetype  = "dashed", color = "gray60")+ 
-  facet_grid(~ Coefficient,
-             scales = "free",
-             labeller = labeller(Coefficient = supp.labs),
-             switch = "y") +
-  coord_flip() + theme_classic() +
-  scale_x_discrete(limits=rev)+
+  facet_grid(~ Coefficient, scales = "free", labeller = labeller(Coefficient = supp.labs), switch = "y") +
+  coord_flip() + 
+  theme_classic() +
+  scale_x_discrete( limits = rev )+
   xlab("Species contributing to composition effect") + 
   ylab("log odds ratio (strength of association)") +
   theme( axis.text = element_text( size = 12 ),
@@ -323,13 +307,14 @@ Spp_comp_data %>%
          strip.text = element_text(size = 8),
          legend.position="none",
          strip.text.x = element_text(size=8, angle=0)) +
-  scale_color_manual(values = clrs)
+  scale_color_manual(values = clrs2)
+
+ggsave(file = "plots/spp_comb.png", spp_comp_plot, device = "png", height = 5, width = 7)
 
 ### --------------------------------------
 ### Traits
 ### Water trait
 ### --------------------------------------
-
 pos = position_dodge(width=1)
 
 em = emmeans(comp_water_trait_fit, ~ Time_pt*water_treatment*Water_trait_derived, at = list(Time_pt = c(1,9)),combine= TRUE)
@@ -353,55 +338,55 @@ water_trait_mm <- selected_contrasts %>%
   mutate(contr = substr(contrast,1,2),
          Trait = str_trim(substr(contrast,4,9))) %>% 
   mutate(water_level = factor(contr, levels = c( "LH", "MH"), labels = loc_labs),
-         Trait = factor(Trait, levels = c("High","Medium","Low"), 
-                        labels = c( "Strong hydrophile",  "Moderate hydrophile", "Non hydrophile" ))) %>% 
+         Trait = factor(Trait, levels = c("High","Medium","Low"), labels = c( "Strong hydrophile",  "Moderate hydrophile", "Non hydrophile" ))) %>% 
   ggplot( aes(x = estimate, y = Trait)) + 
   geom_point()+
   geom_segment(aes(x = estimate - 1.96*SE, xend = estimate + 1.96*SE, 
-                   y = Trait, yend = Trait,
-                   lwd = 4, alpha = 0.25))+
+                   y = Trait, yend = Trait, colour = Trait, size = 1,
+                   alpha = 0.7))+
   theme_classic()+
   geom_vline(xintercept = 0)+
   facet_grid(~ water_level)+
   theme(legend.position = "none")+
   xlab("log odds ratio (strength of association)") +
   ylab("Water requirement") +
-  scale_colour_manual(values = clrs) 
-
+  scale_color_manual(values = clrs3) 
 
 ggsave(file = "plots/water_trait.png", water_trait_mm, device = "png", height = 4, width = 8)
-
 ### --------------------------------------
 ### Fire trait
 ### --------------------------------------
 pos = position_dodge(width=1)
-
-em = emmeans(comp_fire_trait_fit, ~ fire_treatment*water_treatment*Fire.response,combine= TRUE)
+em_fire = emmeans(comp_fire_trait_fit, ~ fire_treatment*water_treatment*Fire.response, data = PA_data, combine= TRUE)
 base <- as.data.frame(diag(2*3*3))
-combm = as.data.frame(em)[,1:3]
+combm = as.data.frame(em_fire)[,1:3]
 
-colnames(base)= rownames(base)=paste0(combm$fire_treatment,combm$water_treatment,combm$Fire.response)
-selected_contrasts <- contrast(em, method = list("LH Killed" =  ( (base$bLKilled - base$ubLKilled) - (base$bHKilled - base$ubHKilled)),  
+colnames(base)= rownames(base) = paste0(combm$fire_treatment,combm$water_treatment,combm$Fire.response)
+select_cont_fire <- contrast(em_fire, method = list("LH Killed" =  ( (base$bLKilled - base$ubLKilled) - (base$bHKilled - base$ubHKilled)),  
                                                  "LH Resprouter" =  (  (base$bLResprouter - base$ubLResprouter) - (base$bHResprouter - base$ubHResprouter)),
                                                  "LH Other" =  ( (base$bLOther  - base$ubLOther ) - (base$bHOther  - base$ubHOther )),
                                                  "MH Killed" = ( (base$bMKilled - base$ubMKilled) - (base$bHKilled - base$ubHKilled)),  
                                                  "MH Resprouter" =  ( (base$bMResprouter - base$ubMResprouter) - (base$bHResprouter - base$ubHResprouter)),
                                                  "MH Other" = ( (base$bMOther  - base$ubMOther ) - (base$bHOther  - base$ubHOther ))),
                                adjust = "mvt")
-selected_contrasts %>% 
+fire_trait_mm <- select_cont_fire %>% 
   as.data.frame() %>% 
   mutate(contr = substr(contrast,1,2),
          Trait = str_trim(substr(contrast,4,13))) %>% 
-  mutate(water_level = factor(contr, levels = c( "LH", "MH"), labels = supp.labs.2[-1]),
+  mutate(water_level = factor(contr, levels = c( "LH", "MH"), labels = supp.labs[-1]),
          Trait = factor(Trait, levels = c("Killed","Resprouter","Other"))) %>% 
   ggplot( aes(x = estimate, y = Trait)) + 
   geom_point() +
   geom_segment(aes(x = estimate - 1.96*SE, xend = estimate + 1.96*SE, 
-                   y = Trait, yend = Trait,
-                   lwd = 4, alpha = 0.25)) +
+                   y = Trait, yend = Trait, colour = Trait, size = 1, alpha = 0.7)) +
   theme_classic() +
   geom_vline(xintercept = 0) +
   facet_grid( ~ water_level) +
   theme(legend.position = "none") +
   xlab("log odds ratio (strength of association)") +
-  ylab("Fire response")
+  ylab("Fire response") +
+  scale_color_manual(values = clrs3) 
+
+ggsave(file = "plots/fire_trait.png", fire_trait_mm, device = "png", height = 4, width = 8)
+
+save.image("results/comp_fire_water_plot_dataMarch22.RData")
