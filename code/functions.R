@@ -61,6 +61,12 @@ startParFitted <- function(model.fitted, model.noFit){
   return(start.pars)
 }
 
+library(ochRe)
 ### For plots
-clrs2 <- ochre_palettes$namatjira_qual[c(6, 8)]
-clrs3 <- ochre_palettes$namatjira_qual[c(5, 6, 8)]
+clrs2 <- ochre_palettes$nolan_ned[c(3,5)]
+clrs3 <- ochre_palettes$lorikeet[4:2]
+
+trait_clrs <- ochre_palettes$jumping_frog[c(2, 3, 4)]
+# library(wesanderson)
+# clrs2 <- wes_palette("GrandBudapest2")[c(4,3)]
+# clrs3 <- wes_palette("GrandBudapest1")[3:1]

@@ -2,7 +2,6 @@ library(glmmTMB)
 library(tidyverse)
 library(ggplot2)
 library(emmeans)
-library(ochRe)
 source("code/functions.R")
 set.seed(1001)
 ###-----
@@ -229,8 +228,8 @@ ranef_fixed_plot <- ranef.plot %>%
 plot.spp <- ranef_fixed_plot$Species[ranef_fixed_plot$effect!="neither"] 
 # New facet label names for supp variable
 supp.labs <- c("(a) Low against high \n water availability \n over time",
-               "(b) Burnt against Unburnt sods \n in Low against High \n water availability",
-               "(c) Burnt against Unburnt sods \n in Medium against High \n water availability")
+               "(b) Burnt against unburnt \n in low against high \n water availability",
+               "(c) Burnt against unburnt \n in medium against high \n water availability")
 names(supp.labs) <- highlight_coef
 
 ### Get full names for species 
@@ -253,7 +252,7 @@ Spp_abundance_data <- ranef_fixed_plot %>%
 spp_abund_plot <- Spp_abundance_data %>% 
   ggplot(aes(x = Species_full, y = btot, color = above_below)) +
   geom_point()+ 
-  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot), size = 1, alpha = 0.5 ) +
+  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot), size = 2, alpha = 0.5 ) +
   geom_hline(yintercept = 0) +
   facet_grid(~ Coefficient, scales = "free", 
              labeller = labeller(Coefficient = supp.labs), switch = "y") +
@@ -272,8 +271,7 @@ spp_abund_plot <- Spp_abundance_data %>%
   scale_colour_manual(values = clrs2)
 
 
-ggsave(file = "plots/spp_abund.png", spp_abund_plot, device = "png", height = 8, width = 8)
-
+ggsave(file = "plots/spp_abund.tiff", spp_abund_plot,  width = 170, height = 180, units = "mm", device = "tiff")
 
 ### --------------------------------------
 ### Composition  Plot
@@ -291,7 +289,7 @@ Spp_comp_data <- ranef_fixed_plot %>%
 spp_comp_plot <- Spp_comp_data %>% 
   ggplot(aes(x = Species_full, y = btot, color = above_below)) +
   geom_point()+ 
-  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot), size = 1, alpha = 0.5 ) +
+  geom_linerange(aes(ymin = conf.low_tot, ymax = conf.high_tot), size = 2, alpha = 0.5 ) +
   geom_hline(data = fixed_coefs %>% filter(Coefficient %in% highlight_coef), 
              aes(yintercept = fixed_coef), linetype  = "dashed", color = "gray60")+ 
   facet_grid(~ Coefficient, scales = "free", labeller = labeller(Coefficient = supp.labs), switch = "y") +
@@ -309,7 +307,7 @@ spp_comp_plot <- Spp_comp_data %>%
          strip.text.x = element_text(size=8, angle=0)) +
   scale_color_manual(values = clrs2)
 
-ggsave(file = "plots/spp_comb.png", spp_comp_plot, device = "png", height = 5, width = 7)
+ggsave(file = "plots/spp_comb.tiff", spp_comp_plot,  width = 170, height = 180, units = "mm", device = "tiff")
 
 ### --------------------------------------
 ### Traits
@@ -331,7 +329,7 @@ selected_contrasts <- contrast(em, method = list("LH High " = ( (base$T9LHigh - 
                                adjust = "mvt")
 
 
-loc_labs  =c("(a) Low against high \n water availability \n over time", "(a) Medium against high \n water availability \n over time") 
+loc_labs  =c("(a) Low against high \n   water availability \n over time", "(a) Medium against high \n water availability \n over time") 
 
 water_trait_mm <- selected_contrasts %>% 
   as.data.frame() %>% 
@@ -342,17 +340,17 @@ water_trait_mm <- selected_contrasts %>%
   ggplot( aes(x = estimate, y = Trait)) + 
   geom_point()+
   geom_segment(aes(x = estimate - 1.96*SE, xend = estimate + 1.96*SE, 
-                   y = Trait, yend = Trait, colour = Trait, size = 1,
-                   alpha = 0.7))+
+                   y = Trait, yend = Trait, colour = Trait, 
+                   alpha = 0.7), size = 1.5)+
   theme_classic()+
   geom_vline(xintercept = 0)+
   facet_grid(~ water_level)+
   theme(legend.position = "none")+
   xlab("log odds ratio (strength of association)") +
   ylab("Water requirement") +
-  scale_color_manual(values = clrs3) 
+  scale_color_manual(values = trait_clrs) 
 
-ggsave(file = "plots/water_trait.png", water_trait_mm, device = "png", height = 4, width = 8)
+ggsave(file = "plots/water_trait.tiff", water_trait_mm,  width = 140, height = 50, units = "mm", device = "tiff")
 ### --------------------------------------
 ### Fire trait
 ### --------------------------------------
@@ -369,6 +367,7 @@ select_cont_fire <- contrast(em_fire, method = list("LH Killed" =  ( (base$bLKil
                                                  "MH Resprouter" =  ( (base$bMResprouter - base$ubMResprouter) - (base$bHResprouter - base$ubHResprouter)),
                                                  "MH Other" = ( (base$bMOther  - base$ubMOther ) - (base$bHOther  - base$ubHOther ))),
                                adjust = "mvt")
+fire_colour <- ochre_palettes$jumping_frog[c(3, 2, 4)]
 fire_trait_mm <- select_cont_fire %>% 
   as.data.frame() %>% 
   mutate(contr = substr(contrast,1,2),
@@ -378,15 +377,15 @@ fire_trait_mm <- select_cont_fire %>%
   ggplot( aes(x = estimate, y = Trait)) + 
   geom_point() +
   geom_segment(aes(x = estimate - 1.96*SE, xend = estimate + 1.96*SE, 
-                   y = Trait, yend = Trait, colour = Trait, size = 1, alpha = 0.7)) +
+                   y = Trait, yend = Trait, colour = Trait, alpha = 0.7), size = 1.5) +
   theme_classic() +
   geom_vline(xintercept = 0) +
   facet_grid( ~ water_level) +
   theme(legend.position = "none") +
   xlab("log odds ratio (strength of association)") +
   ylab("Fire response") +
-  scale_color_manual(values = clrs3) 
+  scale_color_manual(values = trait_clrs) 
 
-ggsave(file = "plots/fire_trait.png", fire_trait_mm, device = "png", height = 4, width = 8)
+ggsave(file = "plots/fire_trait.tiff", fire_trait_mm, width = 140, height = 50, units = "mm", device = "tiff")
 
 save.image("results/comp_fire_water_plot_dataMarch22.RData")

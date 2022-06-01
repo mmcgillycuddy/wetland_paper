@@ -4,7 +4,6 @@ library(tidyr)
 library(lmerTest)
 library(lme4)
 library(emmeans)
-library(Cairo)
 library(kableExtra)
 
 ### --------------------------------------
@@ -58,14 +57,13 @@ blanks <- expand.grid(water_treatment = levels(joined$water_treatment),
                       Median_time = unique(times$Median_time))
 plot_df <- joined %>% 
   bind_rows(blanks)
-pos = position_dodge(width = 50)
+pos = position_dodge(width = 80)
 
 bio_plot <- plot_df %>%
-  ggplot(aes(Median_time, yvar, color = water_treatment), position = position_dodge2(width = 0.1)) +
-  geom_point( position = pos) +
+  ggplot(aes(Median_time, yvar, color = water_treatment, shape = fire_treatment, linetype = fire_treatment), position = position_dodge2(width = 0.1)) +
+  geom_point( position = pos, size = 2) +
   geom_path(position = pos, size = 1) +
-  geom_errorbar(aes(ymin = LCL, ymax = UCL), position = pos, alpha = 0.5, width = 0, size = 1) +
-  facet_wrap( ~ fire_treatment) +
+  geom_errorbar(aes(ymin = LCL, ymax = UCL), position = pos,  alpha = 0.5, width = 0, size = 2) +
   theme_classic() +
   xlab("Time since experiment commenced (days)") + 
   ylab("Mean biomass (+/- 95% CI) per mesocosms (g)") +
@@ -74,7 +72,8 @@ bio_plot <- plot_df %>%
         axis.title = element_text( size = 14)) +
   scale_colour_manual(values = clrs3)
 
-ggsave(plot = bio_plot, file = "plots/biomass_plot.png" , h = 8, w = 12 , type = "cairo-png")
+# ggsave(plot = bio_plot, file = "plots/biomass_plot.png" , width = 210, height = 297, units = "mm", device = "tiff")
+ggsave(plot = bio_plot, file = "plots/biomass_plot.tiff" , width = 150, height = 150, units = "mm", device = "tiff")
 
 ### --------------------------------------
 # Post hoc analysis of time * water interaction unburnt sods

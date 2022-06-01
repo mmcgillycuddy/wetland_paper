@@ -58,22 +58,22 @@ blanks <- expand.grid(water_treatment = levels(joined$water_treatment),
                       Median_time = unique(times$Median_time))
 plot_df <- joined %>% 
   bind_rows(blanks)
-pos = position_dodge(width=60)
+pos = position_dodge(width=70)
+
 rich_plot <- plot_df %>% 
-  ggplot(aes(Median_time, yvar, color = water_treatment))+
-  geom_point( position = pos ) +
+  ggplot(aes(Median_time, yvar, color = water_treatment, shape = fire_treatment, linetype = fire_treatment))+
+  geom_point( position = pos, size = 2 ) +
   geom_path( position = pos , size = 1) +
-  geom_errorbar(aes(ymin = LCL, ymax = UCL), position = pos, alpha = 0.5, width = 0, size = 1) +
-  facet_wrap( ~ fire_treatment) +
+  geom_errorbar(aes(ymin = LCL, ymax = UCL), position = pos, alpha = 0.5, width = 0, size = 2) +
   theme_classic() +
   xlab("Time since experiment commenced (days)") + 
   ylab("Mean species richness (+/- 95% CI) per mesocosms (g)") +
-  theme(legend.position = "bottom",
+  theme(legend.position = "none",
         axis.text = element_text( size = 12), 
         axis.title = element_text( size = 14)) +
   scale_colour_manual(values = clrs3)
 
-ggsave(plot = rich_plot, file = "plots/richness_plot.png" , h = 8, w = 12 , type = "cairo-png")
+ggsave(plot = rich_plot, file = "plots/richness_plot.tiff" , width = 180, height = 150, units = "mm", device = "tiff")
 
 ### --------------------------------------
 ### Post hoc analysis of interactions
