@@ -5,7 +5,7 @@ library(lmerTest)
 library(lme4)
 library(emmeans)
 library(kableExtra)
-
+source("code/functions.R")
 ### --------------------------------------
 ### Data and plotting of biomass
 ### --------------------------------------
@@ -66,13 +66,12 @@ bio_plot <- plot_df %>%
   geom_errorbar(aes(ymin = LCL, ymax = UCL), position = pos,  alpha = 0.5, width = 0, size = 2) +
   theme_classic() +
   xlab("Time since experiment commenced (days)") + 
-  ylab("Mean biomass (+/- 95% CI) per mesocosms (g)") +
+  ylab("Mean biomass (+/- 95% CI) per mesocosm (g)") +
   theme(legend.position = "none",
         axis.text = element_text( size = 12), 
         axis.title = element_text( size = 14)) +
   scale_colour_manual(values = clrs3)
 
-# ggsave(plot = bio_plot, file = "plots/biomass_plot.png" , width = 210, height = 297, units = "mm", device = "tiff")
 ggsave(plot = bio_plot, file = "plots/biomass_plot.tiff" , width = 150, height = 150, units = "mm", device = "tiff")
 
 ### --------------------------------------

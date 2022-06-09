@@ -4,10 +4,9 @@ library(tidyr)
 library(lmerTest)
 library(lme4)
 library(emmeans)
-library(Cairo)
 library(kableExtra)
 library(ochRe)
-
+source("code/functions.R")
 treatment <- read.csv("data/water_fire_treatment.csv") %>% 
   select(Sod,water_treatment, fire_treatment, veg) 
 
@@ -67,7 +66,7 @@ rich_plot <- plot_df %>%
   geom_errorbar(aes(ymin = LCL, ymax = UCL), position = pos, alpha = 0.5, width = 0, size = 2) +
   theme_classic() +
   xlab("Time since experiment commenced (days)") + 
-  ylab("Mean species richness (+/- 95% CI) per mesocosms (g)") +
+  ylab("Mean species richness (+/- 95% CI) per mesocosm") +
   theme(legend.position = "none",
         axis.text = element_text( size = 12), 
         axis.title = element_text( size = 14)) +

@@ -24,7 +24,7 @@ temp_plot <- emmip(ibutton_max.lm,  ~ Water_level ~ Soil_depth , CIs = TRUE, typ
   ylim(0,100)+
   theme(axis.text = element_text(size = 12))+
   theme(text=element_text(size=14))+
-  scale_color_manual(values = clrs3)+
+  scale_color_manual(values = c(clrs3[1], clrs3[3], clrs3[2]))+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
         panel.background = element_blank(), 
@@ -34,7 +34,7 @@ temp_plot
 
 ggsave(plot = temp_plot, file = "plots/temp_plot.tiff" , width = 110, height = 100, units = "mm", device = "tiff")
 
-depth_post <- emmeans(ibutton_max.lm,  ~  Water_level+  Soil_depth, combine= TRUE )
+depth_post <- emmeans(ibutton_max.lm,  ~  Water_level +  Soil_depth, combine= TRUE )
 base <- as.data.frame(diag(6))
 combm = as.data.frame(depth_post)[,1:4]
 

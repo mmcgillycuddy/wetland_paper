@@ -197,7 +197,6 @@ sd.re <- cbind(coef.nam, nam.grp, sd.b)
 names(sd.re) <- c("Coefficient", names(levs[block.plot]), "sd.b")
 ranef.plot <- left_join(b.plot.long, sd.re, by = intersect(names(b.plot.long), names(sd.re)))
 
-load("results/comp_fire_water_plot_dataMarch22.RData")
 ### --------------------------------------
 ### Data for plots
 ### --------------------------------------
@@ -260,7 +259,7 @@ spp_abund_plot <- Spp_abundance_data %>%
   theme_classic()  +
   scale_x_discrete(limits = rev) +
   xlab("Species with evidence of treatment effect") + 
-  ylab("log odds ratio (strength of association)") +
+  ylab("log odds ratio (treatment effect)") +
   theme( axis.text = element_text( size = 12 ),
          axis.text.y = element_text( size = 10, face = "italic"),
          axis.text.x = element_text( size = 8),
@@ -297,7 +296,7 @@ spp_comp_plot <- Spp_comp_data %>%
   theme_classic() +
   scale_x_discrete( limits = rev )+
   xlab("Species contributing to composition effect") + 
-  ylab("log odds ratio (strength of association)") +
+  ylab("log odds ratio (treatment effect)") +
   theme( axis.text = element_text( size = 12 ),
          axis.text.y = element_text( size = 10, face = "italic"),
          axis.text.x = element_text( size = 8),
@@ -346,7 +345,7 @@ water_trait_mm <- selected_contrasts %>%
   geom_vline(xintercept = 0)+
   facet_grid(~ water_level)+
   theme(legend.position = "none")+
-  xlab("log odds ratio (strength of association)") +
+  xlab("log odds ratio (treatment effect)") +
   ylab("Water requirement") +
   scale_color_manual(values = trait_clrs) 
 
@@ -382,10 +381,12 @@ fire_trait_mm <- select_cont_fire %>%
   geom_vline(xintercept = 0) +
   facet_grid( ~ water_level) +
   theme(legend.position = "none") +
-  xlab("log odds ratio (strength of association)") +
+  xlab("log odds ratio (treatment effect)") +
   ylab("Fire response") +
   scale_color_manual(values = trait_clrs) 
 
 ggsave(file = "plots/fire_trait.tiff", fire_trait_mm, width = 140, height = 50, units = "mm", device = "tiff")
 
-save.image("results/comp_fire_water_plot_dataMarch22.RData")
+# save.image("results/comp_fire_water_plot_dataMarch22.RData")
+
+load("results/comp_fire_water_plot_dataMarch22.RData")

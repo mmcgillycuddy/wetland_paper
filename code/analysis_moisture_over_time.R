@@ -8,7 +8,7 @@ library (plotly)
 library(lme4)
 library(emmeans)
 library(lmerTest)
-source("functions.R")
+source("code/functions.R")
 treatment <- read.csv("data/water_fire_treatment_1.csv") %>% 
   select(Sod, Swamp, water_treatment, fire_treatment, veg) 
 
@@ -67,15 +67,12 @@ anova(moist_time, type = "III")
 #### Post hoc plot. 
 emmeans_plot = emmip(moist_time,  ~ water_treatment ~ Time_pt_factor| fire_treatment , CIs = TRUE)+
   theme_classic()
-
 ## plot
-emmeans_plot
 joined <- emmeans_plot$data %>%
   left_join(times, by = "Time_pt_factor")
 blanks <- expand.grid(water_treatment = levels(joined$water_treatment),
                       fire_treatment = levels(joined$fire_treatment),
                       Median_time = unique(times$Median_time))
-
 plot_df <- joined %>% 
   bind_rows(blanks)
 
@@ -96,7 +93,7 @@ plot_moist <- plot_df %>%
   theme(strip.text = element_text(size = 14))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
-  theme(legend.position = "none") +
+  theme(legend.position = "bottom") +
   scale_color_manual(values = clrs3)
 
 ggsave(plot = plot_moist, file = "plots/moisture_plot.tiff" , width = 180, height = 150, units = "mm", device = "tiff")
