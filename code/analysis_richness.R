@@ -65,14 +65,16 @@ rich_plot <- plot_df %>%
   geom_path( position = pos , size = 1) +
   geom_errorbar(aes(ymin = LCL, ymax = UCL), position = pos, alpha = 0.5, width = 0, size = 2) +
   theme_classic() +
+  xlim(0,1500) +
   xlab("Time since experiment commenced (days)") + 
   ylab("Mean species richness (+/- 95% CI) per mesocosm") +
   theme(legend.position = "none",
         axis.text = element_text( size = 12), 
         axis.title = element_text( size = 14)) +
   scale_colour_manual(values = clrs3)
+rich_plot
 
-ggsave(plot = rich_plot, file = "plots/richness_plot.tiff" , width = 180, height = 150, units = "mm", device = "tiff")
+ggsave(plot = rich_plot, file = "plots/richness_plot.tiff" , width = 210, height = 150, units = "mm", device = "tiff")
 
 ### --------------------------------------
 ### Post hoc analysis of interactions

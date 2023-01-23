@@ -67,34 +67,35 @@ anova(moist_time, type = "III")
 #### Post hoc plot. 
 emmeans_plot = emmip(moist_time,  ~ water_treatment ~ Time_pt_factor| fire_treatment , CIs = TRUE)+
   theme_classic()
-## plot
-joined <- emmeans_plot$data %>%
-  left_join(times, by = "Time_pt_factor")
-blanks <- expand.grid(water_treatment = levels(joined$water_treatment),
-                      fire_treatment = levels(joined$fire_treatment),
-                      Median_time = unique(times$Median_time))
-plot_df <- joined %>% 
-  bind_rows(blanks)
 
-pos = position_dodge(width=70)
+emmeans_data <-  emmeans_plot$data
+plot_df <- emmeans_data
+
+plot_df$Median_time <-  as.numeric(as.character(plyr::mapvalues(plot_df$Time_pt_factor, from = times$Time_pt_factor, to =times$Median_time)))
+
+pos = position_dodge(width=60)
 plot_moist <- plot_df %>% 
-  ggplot(aes(Median_time,yvar, color = water_treatment, shape = fire_treatment, linetype = fire_treatment))+
-  geom_point( position=pos)+
-  geom_path(position=pos)+
+  ggplot(aes(Median_time, yvar,
+             color = water_treatment, 
+             shape = fire_treatment, 
+             linetype = fire_treatment)) +
+  geom_point( position=pos) +
+  geom_path(position=pos) +
   geom_errorbar(aes(ymin = LCL, ymax = UCL), position=pos, alpha = 0.5, width = 0, lwd = 1.6)+
-  xlab("Time since experiment commenced (days)")+
-  ylab("Mean % volume soil moisture (+/- 95% CI)")+
+  xlab("Time since experiment commenced (days)") +
+  ylab("Mean % volume soil moisture (+/- 95% CI)") +
   guides(fill=guide_legend(title=NULL))+
-  xlim(0,1500)+
-  ylim(-5,80)+
+  xlim(-60,1500)+
+  ylim(-6,80)+
   theme(axis.text = element_text(size = 12))+
   theme(axis.title = element_text(size = 14))+
   theme(plot.title = element_text(size = 14))+
   theme(strip.text = element_text(size = 14))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "none") +
   scale_color_manual(values = clrs3)
+plot_moist
 
 ggsave(plot = plot_moist, file = "plots/moisture_plot.tiff" , width = 180, height = 150, units = "mm", device = "tiff")
 
